@@ -199,7 +199,7 @@ async function updateData() {
 updateData();
 
 // Auto-update every 5 minutes
-setInterval(updateData, 300000);
+setInterval(updateData, 3000000);
 
 async function runBacktest() {
     try {

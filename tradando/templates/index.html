@@ -5,62 +5,452 @@
     <title>Crypto Trading Simulation</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
 </head>
 <body>
-    <h1>Crypto Trading Simulation</h1>
-    <form id="ticker-form">
-        <label for="ticker">Enter Crypto Symbol (e.g., BTC, ETH):</label>
-        <input type="text" id="ticker" name="ticker" value="BTC">
-        <button type="button" onclick="updateData()">Update</button>
-    </form>
-
-    <div class="portfolio-info">
-        <h2>Starting Portfolio Value: ${{ initial_cash }}</h2>
-        <h2 id="portfolio-value">Current Portfolio Value: ${{ initial_cash }}</h2>
-        <h3 id="holdings">Current Holdings: 0</h3>
-        <h3 id="cash-balance">Cash Balance: ${{ initial_cash }}</h3>
-        <h3 id="latest-price">Latest Price: Loading...</h3>
-    </div>
-
-    <div class="strategy-description">
-        <h3>Strategy Explanation</h3>
-        <p id="strategy-text">Loading strategy description...</p>
-    </div>
-
     <div class="container">
-        <div class="chart-container">
-            <canvas id="priceChart"></canvas>
+        <h1>Crypto Trading Strategy Analysis</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="days">Analysis Period (days):</label>
+                <input type="number" id="days" value="5" min="1" max="30">
+            </div>
+            
+            <div class="control-group">
+                <label for="stop-loss">Stop Loss (%):</label>
+                <input type="number" id="stop-loss" value="5" min="0" max="100" step="0.5">
+            </div>
+            
+            <div class="control-group">
+                <label for="take-profit">Take Profit (%):</label>
+                <input type="number" id="take-profit" value="5" min="0" max="100" step="0.5">
+            </div>
+            
+            <button onclick="runAnalysis()">Analyze Top Cryptos</button>
         </div>
-        <div class="trades-container">
-            <h2>Trading History</h2>
-            <table id="trades-table">
+
+        <div class="summary-container">
+            <h2>Performance Summary</h2>
+            <div id="summary-stats" class="summary-stats">
+                <!-- Filled by JavaScript -->
+            </div>
+        </div>
+
+        <div class="results-container">
+            <h2>Strategy Performance Analysis</h2>
+            <table class="results-table">
                 <thead>
                     <tr>
-                        <th>Time</th>
-                        <th>Type</th>
-                        <th>Price</th>
-                        <th>Amount</th>
-                        <th>Value</th>
+                        <th>Rank</th>
+                        <th>Symbol</th>
+                        <th>Return %</th>
+                        <th>Initial Value</th>
+                        <th>Final Value</th>
+                        <th>Profit/Loss</th>
+                        <th>Price Change %</th>
+                        <th>Current Price</th>
+                        <th>Trades</th>
+                        <th>Current Position</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="results-body">
+                    <!-- Filled by JavaScript -->
                 </tbody>
             </table>
         </div>
     </div>
 
-    <div class="backtest-controls">
-        <h3>Backtest Settings</h3>
-        <form id="backtest-form">
-            <label for="backtest-days">Number of Days:</label>
-            <input type="number" id="backtest-days" name="days" value="5" min="1" max="365">
-            <button type="button" onclick="runBacktest()">Run Backtest</button>
-        </form>
-        <div id="backtest-results" style="margin-top: 20px;">
-            <!-- Results will be displayed here -->
+    <!-- Update the modal HTML structure -->
+    <div id="tradesModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>  <!-- Changed class name to avoid conflicts -->
+            <h2 id="modalTitle">Analysis for <span id="modalSymbol"></span></h2>
+            
+            <!-- Add tabs for chart and table -->
+            <div class="modal-tabs">
+                <button class="tab-btn active" onclick="switchTab('chart')">Chart</button>
+                <button class="tab-btn" onclick="switchTab('trades')">Trades List</button>
+            </div>
+            
+            <!-- Chart container -->
+            <div id="chartTab" class="tab-content">
+                <canvas id="tradesChart"></canvas>
+            </div>
+            
+            <!-- Trades table container -->
+            <div id="tradesTab" class="tab-content" style="display: none;">
+                <div id="tradesTable"></div>
+            </div>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        let currentChart = null;
+
+        async function runAnalysis() {
+            const days = document.getElementById('days').value;
+            const stopLoss = document.getElementById('stop-loss').value;
+            const takeProfit = document.getElementById('take-profit').value;
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `days=${days}&stop_loss=${stopLoss}&take_profit=${takeProfit}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Update summary
+                const summaryHtml = `
+                    <div class="summary-card">
+                        <h3>Overall Performance</h3>
+                        <div class="summary-grid">
+                            <div class="metric">
+                                <span class="label">Total Profit/Loss</span>
+                                <span class="value ${data.summary.total_profit >= 0 ? 'positive' : 'negative'}">
+                                    $${data.summary.total_profit.toLocaleString()}
+                                </span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Average Return</span>
+                                <span class="value ${data.summary.average_return_pct >= 0 ? 'positive' : 'negative'}">
+                                    ${data.summary.average_return_pct}%
+                                </span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Best Performer</span>
+                                <span class="value">${data.summary.best_performer}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Analyzed Pairs</span>
+                                <span class="value">${data.summary.analyzed_pairs}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('summary-stats').innerHTML = summaryHtml;
+
+                // Update detailed results table
+                const resultsHtml = data.results.map((result, index) => {
+                    const profit = result.final_value - result.initial_value;
+                    const position = result.holdings > 0 
+                        ? `${result.holdings} ${result.symbol.split('-')[0]}`
+                        : `$${result.cash} USD`;
+                    
+                    return `
+                        <tr class="${profit >= 0 ? 'positive-row' : 'negative-row'}">
+                            <td class="rank">${index + 1}</td>
+                            <td class="symbol">${result.symbol}</td>
+                            <td class="return ${result.return_pct >= 0 ? 'positive' : 'negative'}">
+                                ${result.return_pct}%
+                            </td>
+                            <td class="value">$${result.initial_value.toLocaleString()}</td>
+                            <td class="value">$${result.final_value.toLocaleString()}</td>
+                            <td class="profit ${profit >= 0 ? 'positive' : 'negative'}">
+                                $${Math.abs(profit).toLocaleString()}
+                            </td>
+                            <td class="price-change ${result.price_change_pct >= 0 ? 'positive' : 'negative'}">
+                                ${result.price_change_pct}%
+                            </td>
+                            <td class="current-price">$${result.current_price.toLocaleString()}</td>
+                            <td class="trades">
+                                ${result.n_trades}
+                            </td>
+                            <td class="position">${position}</td>
+                            <td class="actions">
+                                <button class="view-trades-btn" onclick='showTrades(${JSON.stringify({
+                                    symbol: result.symbol,
+                                    trades: result.trades
+                                })})'>
+                                    View Trades
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                document.getElementById('results-body').innerHTML = resultsHtml;
+            } catch (error) {
+                alert('Error running analysis: ' + error);
+            }
+        }
+
+        async function showTrades(data) {
+            const modal = document.getElementById('tradesModal');
+            const modalSymbol = document.getElementById('modalSymbol');
+            const tradesTable = document.getElementById('tradesTable');
+            
+            modalSymbol.textContent = data.symbol;
+            
+            try {
+                // Fetch historical data including SMAs
+                const response = await fetch('/get_historical_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        symbol: data.symbol,
+                        days: document.getElementById('days').value
+                    })
+                });
+                
+                const historicalData = await response.json();
+                
+                // Create the chart with SMAs
+                createTradesChart(historicalData, data.trades);
+                
+                // Create trades table
+                const tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Reason</th>
+                                <th>Time</th>
+                                <th>Price</th>
+                                <th>Amount</th>
+                                <th>Shares</th>
+                                <th>P&L</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.trades.map(trade => {
+                                const reasonClass = {
+                                    'stop_loss': 'stop-loss',
+                                    'take_profit': 'take-profit',
+                                    'sma_cross': 'signal'
+                                }[trade.reason];
+                                
+                                const pnlHtml = trade.type === 'sell' ? `
+                                    <span class="${trade.pnl_amount >= 0 ? 'positive' : 'negative'}">
+                                        ${trade.pnl_amount >= 0 ? '+' : ''}$${Math.abs(trade.pnl_amount).toFixed(2)}
+                                        (${trade.pnl_pct >= 0 ? '+' : ''}${trade.pnl_pct}%)
+                                    </span>
+                                ` : '';
+                                
+                                return `
+                                    <tr class="${trade.type}-row">
+                                        <td>${trade.type.toUpperCase()}</td>
+                                        <td><span class="trade-reason ${reasonClass}">${trade.reason}</span></td>
+                                        <td>${trade.timestamp}</td>
+                                        <td>$${trade.price}</td>
+                                        <td>$${trade.amount}</td>
+                                        <td>${trade.shares}</td>
+                                        <td>${pnlHtml}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+                tradesTable.innerHTML = tableHtml;
+                modal.style.display = "block";
+                
+            } catch (error) {
+                console.error('Error fetching historical data:', error);
+                alert('Error loading chart data');
+            }
+        }
+
+        function createTradesChart(historicalData, trades) {
+            const ctx = document.getElementById('tradesChart').getContext('2d');
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            const chartData = {
+                labels: historicalData.timestamps,
+                datasets: [
+                    {
+                        label: 'Price',
+                        data: historicalData.timestamps.map((t, i) => ({
+                            x: moment(t),
+                            y: historicalData.prices[i]
+                        })),
+                        borderColor: 'rgb(75, 192, 192)',
+                        fill: false,
+                        pointRadius: 0,
+                        order: 1
+                    },
+                    {
+                        label: 'SMA20',
+                        data: historicalData.timestamps.map((t, i) => ({
+                            x: moment(t),
+                            y: historicalData.sma20[i]
+                        })),
+                        borderColor: 'rgba(255, 99, 132, 0.8)',
+                        borderWidth: 1,
+                        fill: false,
+                        pointRadius: 0,
+                        order: 2
+                    },
+                    {
+                        label: 'SMA50',
+                        data: historicalData.timestamps.map((t, i) => ({
+                            x: moment(t),
+                            y: historicalData.sma50[i]
+                        })),
+                        borderColor: 'rgba(54, 162, 235, 0.8)',
+                        borderWidth: 1,
+                        fill: false,
+                        pointRadius: 0,
+                        order: 3
+                    },
+                    {
+                        label: 'Buy Points',
+                        data: trades.filter(t => t.type === 'buy').map(t => ({
+                            x: moment(t.timestamp),
+                            y: t.price
+                        })),
+                        backgroundColor: 'green',
+                        pointStyle: 'triangle',
+                        pointRadius: 8,
+                        showLine: false,
+                        order: 0
+                    },
+                    {
+                        label: 'Sell Points',
+                        data: trades.filter(t => t.type === 'sell').map(t => ({
+                            x: moment(t.timestamp),
+                            y: t.price,
+                            reason: t.reason  // Add reason for tooltip
+                        })),
+                        backgroundColor: trade => {
+                            const reason = trade.raw?.reason;
+                            return reason === 'stop_loss' ? 'red' :
+                                   reason === 'take_profit' ? 'gold' : 'red';
+                        },
+                        pointStyle: 'triangle',
+                        pointRadius: 8,
+                        rotation: 180,
+                        showLine: false,
+                        order: 0
+                    }
+                ]
+            };
+
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'hour',
+                                displayFormats: {
+                                    hour: 'MMM D, HH:mm'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Price ($)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const dataset = context.dataset;
+                                    const dataPoint = context.raw;
+                                    
+                                    if (dataset.label === 'Price') {
+                                        return `Price: $${context.parsed.y.toFixed(2)}`;
+                                    }
+                                    if (dataset.label === 'SMA20') {
+                                        return `SMA20: $${context.parsed.y.toFixed(2)}`;
+                                    }
+                                    if (dataset.label === 'SMA50') {
+                                        return `SMA50: $${context.parsed.y.toFixed(2)}`;
+                                    }
+                                    if (dataset.label === 'Buy Points') {
+                                        return `Buy: $${context.parsed.y.toFixed(2)}`;
+                                    }
+                                    if (dataset.label === 'Sell Points') {
+                                        const reason = dataPoint.reason || 'signal';
+                                        return `Sell (${reason}): $${context.parsed.y.toFixed(2)}`;
+                                    }
+                                    return `${dataset.label}: $${context.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide content
+            document.getElementById('chartTab').style.display = tabName === 'chart' ? 'block' : 'none';
+            document.getElementById('tradesTab').style.display = tabName === 'trades' ? 'block' : 'none';
+            
+            // Resize chart if showing chart tab
+            if (tabName === 'chart' && currentChart) {
+                currentChart.resize();
+            }
+        }
+
+        // Add these event listeners after your existing scripts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close button click handler
+            document.querySelector('.close-btn').addEventListener('click', function() {
+                document.getElementById('tradesModal').style.display = 'none';
+            });
+
+            // Click outside modal to close
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('tradesModal');
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // Escape key to close
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    document.getElementById('tradesModal').style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

@@ -93,3 +93,339 @@ input[type="text"], input[type="number"] {
     line-height: 1.6;
     color: #666;
 }
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);  /* Semi-transparent background */
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: #ffffff;  /* Solid white background */
+    margin: 5vh auto;          /* Changed from 15% to 5vh for better positioning */
+    padding: 25px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;        /* Added for proper positioning */
+}
+
+.modal-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 10px;
+    background-color: #ffffff;  /* Ensure tabs have solid background */
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1em;
+    color: #666;
+}
+
+.tab-btn.active {
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+}
+
+.tab-content {
+    background-color: #ffffff;  /* Ensure content has solid background */
+    min-height: 400px;
+    padding: 20px 0;
+}
+
+#chartTab {
+    height: 500px;
+    width: 100%;
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    right: 25px;
+    top: 15px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1001;
+    padding: 0 5px;
+    line-height: 1;
+    border: none;
+    background: none;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #000;
+}
+
+/* Trade table styles */
+.buy-row {
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.sell-row {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+tr:hover {
+    background-color: #f5f5f5;
+}
+
+.trade-profit {
+    font-weight: bold;
+}
+
+/* Summary styles */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.metric .label {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.metric .value {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+/* Results table styles */
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.results-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.results-table td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.results-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.positive-row {
+    border-left: 4px solid #4caf50;
+}
+
+.negative-row {
+    border-left: 4px solid #f44336;
+}
+
+.positive {
+    color: #4caf50;
+}
+
+.negative {
+    color: #f44336;
+}
+
+.rank {
+    font-weight: bold;
+    color: #666;
+}
+
+.symbol {
+    font-weight: bold;
+}
+
+.value, .profit, .current-price {
+    font-family: monospace;
+    text-align: right;
+}
+
+.return, .price-change {
+    font-weight: bold;
+    text-align: right;
+}
+
+.trades {
+    text-align: center;
+}
+
+.position {
+    font-family: monospace;
+}
+
+.view-trades-btn {
+    padding: 6px 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.view-trades-btn:hover {
+    background: #0056b3;
+}
+
+/* Responsive table */
+@media (max-width: 1200px) {
+    .results-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+
+/* Loading state */
+.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: "Loading...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2em;
+    color: #666;
+}
+
+.controls {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.control-group label {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.control-group input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100px;
+}
+
+/* Update trade table to show reason */
+.trade-reason {
+    font-size: 0.9em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+}
+
+.trade-reason.stop_loss {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.trade-reason.take_profit {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+/* Trade reason badges */
+.trade-reason {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.trade-reason.stop-loss {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.trade-reason.take-profit {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.trade-reason.signal {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+/* Trade rows */
+.buy-row {
+    background-color: rgba(232, 245, 233, 0.2);
+}
+
+.sell-row {
+    background-color: rgba(255, 235, 238, 0.2);
+}
+
+/* P&L values */
+.positive {
+    color: #2e7d32;
+}
+
+.negative {
+    color: #c62828;
+}
