@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crypto Trading Simulation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Crypto Trading Simulation</h1>
+    <form id="ticker-form">
+        <label for="ticker">Enter Crypto Symbol (e.g., BTC, ETH):</label>
+        <input type="text" id="ticker" name="ticker" value="BTC">
+        <button type="button" onclick="updateData()">Update</button>
+    </form>
+
+    <div class="portfolio-info">
+        <h2>Starting Portfolio Value: ${{ initial_cash }}</h2>
+        <h2 id="portfolio-value">Current Portfolio Value: ${{ initial_cash }}</h2>
+        <h3 id="holdings">Current Holdings: 0</h3>
+        <h3 id="cash-balance">Cash Balance: ${{ initial_cash }}</h3>
+        <h3 id="latest-price">Latest Price: Loading...</h3>
+    </div>
+
+    <div class="strategy-description">
+        <h3>Strategy Explanation</h3>
+        <p id="strategy-text">Loading strategy description...</p>
+    </div>
+
+    <div class="container">
+        <div class="chart-container">
+            <canvas id="priceChart"></canvas>
+        </div>
+        <div class="trades-container">
+            <h2>Trading History</h2>
+            <table id="trades-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Price</th>
+                        <th>Amount</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="backtest-controls">
+        <h3>Backtest Settings</h3>
+        <form id="backtest-form">
+            <label for="backtest-days">Number of Days:</label>
+            <input type="number" id="backtest-days" name="days" value="5" min="1" max="365">
+            <button type="button" onclick="runBacktest()">Run Backtest</button>
+        </form>
+        <div id="backtest-results" style="margin-top: 20px;">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
