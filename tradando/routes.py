@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, jsonify, request
 from tradando.models.portfolio import Portfolio
-from tradando.utils import fetch_historical_data, utc_to_local, get_strategy_description, get_top_cryptos, analyze_crypto
+from tradando.utils import fetch_historical_data, utc_to_local, get_strategy_description#, get_top_cryptos, analyze_crypto
 from tradando.config import Config
 from datetime import datetime
 import numpy as np
@@ -21,7 +21,7 @@ def index():
 
 @api_bp.route('/update', methods=['POST'])
 def update():
-    ticker = request.form.get('ticker', 'BTC-USD')
+    ticker = request.form.get('ticker')  # Default to BTC-USD
     data = fetch_historical_data(ticker)
     
     if data is None or data.empty:
@@ -75,7 +75,7 @@ def update():
 @api_bp.route('/backtest', methods=['POST'])
 def backtest():
     try:
-        ticker = request.form.get('ticker', 'BTC-USD')
+        ticker = request.form.get('ticker')  # Default to BTC-USD
         days = int(request.form.get('days', '5'))  # Default to 30 days
         
         # Reset portfolio for backtesting
@@ -153,7 +153,9 @@ def analyze():
         stop_loss = float(request.form.get('stop_loss', '5'))
         take_profit = float(request.form.get('take_profit', '5'))
         strategy_name = request.form.get('strategy', 'sma_cross')
-        
+        ticker = request.form.get('ticker')  # Default to BTC-USD
+
+
         # Create strategy (can be expanded for multiple strategies)
         if strategy_name == 'sma_cross':
             strategy = SMACrossStrategy(
@@ -167,7 +169,7 @@ def analyze():
         backtester = Backtester(strategy)
         
         # Get data and run backtest
-        symbol = 'BTC-USD'  # For testing
+        symbol = ticker  # For testing
         data = fetch_historical_data(symbol, days)
         
         if data is None or data.empty:

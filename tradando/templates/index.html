@@ -28,6 +28,14 @@
                 <input type="number" id="take-profit" value="5" min="0" max="100" step="0.5">
             </div>
             
+            <select id="crypto-pair">
+                <option value="BTC-USD">Bitcoin (BTC)</option>
+                <option value="ETH-USD">Ethereum (ETH)</option>
+                <option value="LTC-USD">Litecoin (LTC)</option>
+                <option value="XRP-USD">Ripple (XRP)</option>
+                <!-- Add more pairs as needed -->
+            </select>
+            
             <button onclick="runAnalysis()">Analyze Top Cryptos</button>
         </div>
 
@@ -94,12 +102,13 @@
             const days = document.getElementById('days').value;
             const stopLoss = document.getElementById('stop-loss').value;
             const takeProfit = document.getElementById('take-profit').value;
+            const cryptoPair = document.getElementById('crypto-pair').value;
             
             try {
                 const response = await fetch('/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `days=${days}&stop_loss=${stopLoss}&take_profit=${takeProfit}`
+                    body: `days=${days}&stop_loss=${stopLoss}&take_profit=${takeProfit}&ticker=${cryptoPair}`
                 });
                 
                 const data = await response.json();

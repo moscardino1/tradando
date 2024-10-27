@@ -53,10 +53,10 @@ def get_strategy_description():
         print(f"Error fetching strategy description: {e}")
         return "A Moving Average Crossover strategy using SMA20 and SMA50."
 
-def get_top_cryptos(limit: int = 1) -> List[str]:
-    """Fetch top cryptocurrencies by market cap"""
-    # For testing, just return BTC
-    return ['BTC-USD']
+# def get_top_cryptos(limit: int = 1) -> List[str]:
+#     """Fetch top cryptocurrencies by market cap"""
+#     # For testing, just return BTC
+#     return ['BTC-USD']
 
 def analyze_crypto(crypto: str, days: int = 5, stop_loss_pct: float = 5, take_profit_pct: float = 5) -> Dict[str, Any]:
     """Analyze a single cryptocurrency"""
