@@ -67,14 +67,17 @@ def backtest():
 @api_bp.route('/analyze', methods=['POST'])
 def analyze():
     try:
-        days = int(request.form.get('days', '5'))
-        stop_loss = float(request.form.get('stop_loss', '5'))
-        take_profit = float(request.form.get('take_profit', '5'))
-        strategy_name = request.form.get('strategy', 'sma_cross')
-        ticker = request.form.get('ticker')  # Default to BTC-USD
+        data = request.get_json()  # Changed to handle JSON data
+        days = int(data.get('days', '5'))
+        stop_loss = float(data.get('stop_loss', '5'))
+        take_profit = float(data.get('take_profit', '5'))
+        strategy_name = data.get('strategy', 'sma_cross')
+        tickers = data.get('tickers', [])  # Get array of tickers
 
+        if not tickers:
+            return jsonify({"error": "No tickers selected"}), 400
 
-        # Create strategy (can be expanded for multiple strategies)
+        # Create strategy
         if strategy_name == 'sma_cross':
             strategy = SMACrossStrategy(
                 stop_loss_pct=stop_loss,
@@ -83,28 +86,42 @@ def analyze():
         else:
             return jsonify({"error": "Invalid strategy"}), 400
             
-        # Create backtester
         backtester = Backtester(strategy)
+        all_results = []
+        total_profit = 0
         
-        # Get data and run backtest
-        symbol = ticker  # For testing
-        data = fetch_historical_data(symbol, days)
-        
-        if data is None or data.empty:
-            return jsonify({"error": "No data available"}), 404
+        # Run analysis for each selected ticker
+        for symbol in tickers:
+            data = fetch_historical_data(symbol, days)
             
-        result = backtester.run(data)
-        result['symbol'] = symbol
+            if data is None or data.empty:
+                continue
+                
+            result = backtester.run(data)
+            result['symbol'] = symbol
+            all_results.append(result)
+            total_profit += (result['final_value'] - result['initial_value'])
+
+        if not all_results:
+            return jsonify({"error": "No data available for selected pairs"}), 404
+
+        # Sort results by return percentage
+        all_results.sort(key=lambda x: x['return_pct'], reverse=True)
+        
+        # Calculate summary statistics
+        avg_return = sum(r['return_pct'] for r in all_results) / len(all_results)
+        best_performer = all_results[0]['symbol']
+        best_return = all_results[0]['return_pct']
         
         response_data = {
             'summary': {
-                'total_profit': round(result['final_value'] - result['initial_value'], 2),
-                'average_return_pct': result['return_pct'],
-                'best_performer': symbol,
-                'best_return_pct': result['return_pct'],
-                'analyzed_pairs': 1
+                'total_profit': round(total_profit, 2),
+                'average_return_pct': round(avg_return, 2),
+                'best_performer': best_performer,
+                'best_return_pct': round(best_return, 2),
+                'analyzed_pairs': len(all_results)
             },
-            'results': [result]
+            'results': all_results
         }
         
         return jsonify(response_data)

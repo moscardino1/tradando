@@ -429,3 +429,22 @@ tr:hover {
 .negative {
     color: #c62828;
 }
+
+#crypto-pairs {
+    width: 200px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+#crypto-pairs option {
+    padding: 4px 8px;
+}
+
+.control-group small {
+    display: block;
+    color: #666;
+    font-size: 0.8em;
+    margin-top: 4px;
+}
