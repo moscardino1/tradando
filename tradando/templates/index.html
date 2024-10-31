@@ -29,6 +29,15 @@
             </div>
             
             <div class="control-group">
+                <label for="strategy">Trading Strategy:</label>
+                <select id="strategy">
+                    <option value="sma_cross">SMA Crossover</option>
+                    <option value="rsi">RSI Strategy</option>
+                    <option value="macd">MACD Strategy</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
                 <label for="crypto-pairs">Select Crypto Pairs:</label>
                 <select id="crypto-pairs" multiple size="5">
                     <option value="BTC-USD" selected>Bitcoin (BTC)</option>
@@ -109,6 +118,7 @@
             const days = document.getElementById('days').value;
             const stopLoss = document.getElementById('stop-loss').value;
             const takeProfit = document.getElementById('take-profit').value;
+            const strategy = document.getElementById('strategy').value;
             const selectedPairs = Array.from(document.getElementById('crypto-pairs').selectedOptions)
                 .map(option => option.value);
             
@@ -125,6 +135,7 @@
                         days: days,
                         stop_loss: stopLoss,
                         take_profit: takeProfit,
+                        strategy: strategy,
                         tickers: selectedPairs
                     })
                 });

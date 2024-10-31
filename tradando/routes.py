@@ -9,6 +9,8 @@ import logging
 import pandas as pd
 from tradando.strategies.sma_cross import SMACrossStrategy
 from tradando.services.backtest import Backtester
+from tradando.strategies.rsi import RSIStrategy
+from tradando.strategies.macd import MACDStrategy
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -67,19 +69,29 @@ def backtest():
 @api_bp.route('/analyze', methods=['POST'])
 def analyze():
     try:
-        data = request.get_json()  # Changed to handle JSON data
+        data = request.get_json()
         days = int(data.get('days', '5'))
         stop_loss = float(data.get('stop_loss', '5'))
         take_profit = float(data.get('take_profit', '5'))
         strategy_name = data.get('strategy', 'sma_cross')
-        tickers = data.get('tickers', [])  # Get array of tickers
+        tickers = data.get('tickers', [])
 
         if not tickers:
             return jsonify({"error": "No tickers selected"}), 400
 
-        # Create strategy
+        # Create strategy based on selection
         if strategy_name == 'sma_cross':
             strategy = SMACrossStrategy(
+                stop_loss_pct=stop_loss,
+                take_profit_pct=take_profit
+            )
+        elif strategy_name == 'rsi':
+            strategy = RSIStrategy(
+                stop_loss_pct=stop_loss,
+                take_profit_pct=take_profit
+            )
+        elif strategy_name == 'macd':
+            strategy = MACDStrategy(
                 stop_loss_pct=stop_loss,
                 take_profit_pct=take_profit
             )
