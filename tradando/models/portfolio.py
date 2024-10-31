@@ -76,3 +76,10 @@ class Portfolio:
     def get_current_value(self, current_price: float) -> float:
         """Calculate current portfolio value"""
         return self.cash + (self.holdings * current_price)
+
+    def execute_trade(self, trade_type: str, price: float, timestamp, reason: str = 'signal') -> Dict[str, Any]:
+        if trade_type == 'buy':
+            return self.execute_buy(price, timestamp)
+        elif trade_type == 'sell':
+            return self.execute_sell(price, timestamp, reason)
+        return None

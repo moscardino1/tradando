@@ -30,20 +30,16 @@ class Backtester:
                 )
                 
                 if exit_check['exit']:
-                    portfolio.execute_sell(
-                        current_price,
-                        current_time,
-                        reason=exit_check['reason']
-                    )
+                    portfolio.execute_trade('sell', current_price, current_time, exit_check['reason'])
                     continue
             
             # Check strategy signals
             signal = df['signal'].iloc[i]
             
             if signal > 0 and portfolio.cash > 0:
-                portfolio.execute_buy(current_price, current_time)
+                portfolio.execute_trade('buy', current_price, current_time)
             elif signal < 0 and portfolio.holdings > 0:
-                portfolio.execute_sell(current_price, current_time)
+                portfolio.execute_trade('sell', current_price, current_time)
         
         # Calculate final results
         final_price = float(df['Close'].iloc[-1])
