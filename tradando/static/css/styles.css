@@ -458,3 +458,58 @@ tr:hover {
 .results-table tr:hover td.strategy {
     background-color: rgba(0, 0, 0, 0.05);
 }
+
+.strategy-comparison {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.strategy-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.strategy-card h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.strategy-stats {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+}
+
+.stat .label {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.stat .value {
+    font-weight: 500;
+}
+
+#strategies {
+    width: 200px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+}
+
+#strategies option {
+    padding: 4px 8px;
+}

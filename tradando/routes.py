@@ -73,47 +73,51 @@ def analyze():
         days = int(data.get('days', '5'))
         stop_loss = float(data.get('stop_loss', '5'))
         take_profit = float(data.get('take_profit', '5'))
-        strategy_name = data.get('strategy', 'sma_cross')
+        strategies = data.get('strategies', ['sma_cross'])  # Now accepts multiple strategies
         tickers = data.get('tickers', [])
 
         if not tickers:
             return jsonify({"error": "No tickers selected"}), 400
 
-        # Create strategy based on selection
-        if strategy_name == 'sma_cross':
-            strategy = SMACrossStrategy(
-                stop_loss_pct=stop_loss,
-                take_profit_pct=take_profit
-            )
-        elif strategy_name == 'rsi':
-            strategy = RSIStrategy(
-                stop_loss_pct=stop_loss,
-                take_profit_pct=take_profit
-            )
-        elif strategy_name == 'macd':
-            strategy = MACDStrategy(
-                stop_loss_pct=stop_loss,
-                take_profit_pct=take_profit
-            )
-        else:
-            return jsonify({"error": "Invalid strategy"}), 400
-            
-        backtester = Backtester(strategy)
         all_results = []
         total_profit = 0
         
-        # Run analysis for each selected ticker
+        # Create strategy instances
+        strategy_instances = {}
+        for strategy_name in strategies:
+            if strategy_name == 'sma_cross':
+                strategy_instances[strategy_name] = SMACrossStrategy(
+                    stop_loss_pct=stop_loss,
+                    take_profit_pct=take_profit
+                )
+            elif strategy_name == 'rsi':
+                strategy_instances[strategy_name] = RSIStrategy(
+                    stop_loss_pct=stop_loss,
+                    take_profit_pct=take_profit
+                )
+            elif strategy_name == 'macd':
+                strategy_instances[strategy_name] = MACDStrategy(
+                    stop_loss_pct=stop_loss,
+                    take_profit_pct=take_profit
+                )
+            else:
+                continue
+
+        # Run analysis for each combination of ticker and strategy
         for symbol in tickers:
             data = fetch_historical_data(symbol, days)
             
             if data is None or data.empty:
                 continue
                 
-            result = backtester.run(data)
-            result['symbol'] = symbol
-            result['strategy'] = strategy.name
-            all_results.append(result)
-            total_profit += (result['final_value'] - result['initial_value'])
+            for strategy_name, strategy in strategy_instances.items():
+                backtester = Backtester(strategy)
+                result = backtester.run(data)
+                result['symbol'] = symbol
+                result['strategy'] = strategy.name
+                result['strategy_key'] = strategy_name
+                all_results.append(result)
+                total_profit += (result['final_value'] - result['initial_value'])
 
         if not all_results:
             return jsonify({"error": "No data available for selected pairs"}), 404
@@ -121,18 +125,37 @@ def analyze():
         # Sort results by return percentage
         all_results.sort(key=lambda x: x['return_pct'], reverse=True)
         
-        # Calculate summary statistics
-        avg_return = sum(r['return_pct'] for r in all_results) / len(all_results)
-        best_performer = all_results[0]['symbol']
-        best_return = all_results[0]['return_pct']
+        # Enhanced summary statistics
+        strategy_stats = {}
+        for strategy_name in strategies:
+            strategy_results = [r for r in all_results if r['strategy_key'] == strategy_name]
+            if strategy_results:
+                avg_return = sum(r['return_pct'] for r in strategy_results) / len(strategy_results)
+                best_trade = max(strategy_results, key=lambda x: x['return_pct'])
+                worst_trade = min(strategy_results, key=lambda x: x['return_pct'])
+                
+                strategy_stats[strategy_name] = {
+                    'avg_return': round(avg_return, 2),
+                    'best_trade': {
+                        'symbol': best_trade['symbol'],
+                        'return': round(best_trade['return_pct'], 2)
+                    },
+                    'worst_trade': {
+                        'symbol': worst_trade['symbol'],
+                        'return': round(worst_trade['return_pct'], 2)
+                    },
+                    'total_trades': sum(r['n_trades'] for r in strategy_results),
+                    'profit': sum(r['final_value'] - r['initial_value'] for r in strategy_results)
+                }
         
         response_data = {
             'summary': {
                 'total_profit': round(total_profit, 2),
-                'average_return_pct': round(avg_return, 2),
-                'best_performer': best_performer,
-                'best_return_pct': round(best_return, 2),
-                'analyzed_pairs': len(all_results)
+                'average_return_pct': round(sum(r['return_pct'] for r in all_results) / len(all_results), 2),
+                'best_performer': all_results[0]['symbol'],
+                'best_return_pct': round(all_results[0]['return_pct'], 2),
+                'analyzed_pairs': len(set(r['symbol'] for r in all_results)),
+                'strategy_stats': strategy_stats
             },
             'results': all_results
         }
