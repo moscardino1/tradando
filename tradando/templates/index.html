@@ -69,6 +69,7 @@
                     <tr>
                         <th>Rank</th>
                         <th>Symbol</th>
+                        <th>Strategy</th>
                         <th>Return %</th>
                         <th>Initial Value</th>
                         <th>Final Value</th>
@@ -188,6 +189,7 @@
                         <tr class="${profit >= 0 ? 'positive-row' : 'negative-row'}">
                             <td class="rank">${index + 1}</td>
                             <td class="symbol">${result.symbol}</td>
+                            <td class="strategy">${result.strategy}</td>
                             <td class="return ${result.return_pct >= 0 ? 'positive' : 'negative'}">
                                 ${result.return_pct}%
                             </td>

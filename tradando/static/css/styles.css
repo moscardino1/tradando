@@ -448,3 +448,13 @@ tr:hover {
     font-size: 0.8em;
     margin-top: 4px;
 }
+
+.results-table td.strategy {
+    font-weight: 500;
+    color: #666;
+}
+
+/* Optional: Add a subtle background to help distinguish different strategies */
+.results-table tr:hover td.strategy {
+    background-color: rgba(0, 0, 0, 0.05);
+}

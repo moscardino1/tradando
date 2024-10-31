@@ -111,6 +111,7 @@ def analyze():
                 
             result = backtester.run(data)
             result['symbol'] = symbol
+            result['strategy'] = strategy.name
             all_results.append(result)
             total_profit += (result['final_value'] - result['initial_value'])
 
